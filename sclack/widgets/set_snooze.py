@@ -68,15 +68,13 @@ class SetSnoozeWidget(urwid.AttrWrap):
                 'time': snooze_time['time']
             })
 
-        self.header = urwid.Edit('')
-
         self.original_items = lines
         widgets = [SetSnoozeWidgetItem(item['icon'], item['title'], item['time']) for item in self.original_items]
 
         self.snooze_time_list = SetSnoozeWidgetList(widgets)
 
         snooze_list = urwid.LineBox(
-            urwid.Frame(self.snooze_time_list, header=self.header),
+            urwid.Frame(self.snooze_time_list),
             title='Snooze notifications',
             title_align='left'
         )
@@ -106,5 +104,3 @@ class SetSnoozeWidget(urwid.AttrWrap):
             if focus[0]:
                 urwid.emit_signal(self, 'close_set_snooze')
                 return True
-
-        self.header.keypress((size[0],), key)

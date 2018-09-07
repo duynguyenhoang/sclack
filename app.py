@@ -24,6 +24,7 @@ from sclack.store import Store
 from sclack.themes import themes
 
 from sclack.widgets.set_snooze import SetSnoozeWidget
+from sclack.widgets.emotion import EmotionsWidget
 from sclack.utils.channel import is_dm, is_group, is_channel
 
 loop = asyncio.get_event_loop()
@@ -60,6 +61,7 @@ class App:
         self.config = config
         self.quick_switcher = None
         self.set_snooze_widget = None
+        self.emoji_list = None
         self.workspaces = list(config['workspaces'].items())
         self.store = Store(self.workspaces, self.config)
         Store.instance = self.store
@@ -302,6 +304,7 @@ class App:
         urwid.connect_signal(self.chatbox, 'mark_read', self.handle_mark_read)
         urwid.connect_signal(self.chatbox, 'open_quick_switcher', self.open_quick_switcher)
         urwid.connect_signal(self.chatbox, 'open_set_snooze', self.open_set_snooze)
+        urwid.connect_signal(self.chatbox, 'open_emoji', self.open_emoji)
 
         urwid.connect_signal(self.message_box.prompt_widget, 'submit_message', self.submit_message)
         urwid.connect_signal(self.message_box.prompt_widget, 'go_to_last_message', self.go_to_last_message)
@@ -654,6 +657,25 @@ class App:
     def handle_set_snooze_time(self, snoozed_time):
         loop.create_task(self.dispatch_snooze_time(snoozed_time))
 
+    def handle_assign_emoji(self, emoji_icon):
+        # Set text
+        # :emoji_icon:
+        text = ':{}:'.format(emoji_icon)
+        # get_logger(self.chatbox.message_box.get_text()).error()
+        self.chatbox.message_box.text = '{} {}'.format(self.chatbox.message_box.text, text).strip()
+        return self.set_insert_mode()
+
+    def handle_close_emoji_list(self):
+        """
+        Close set_snooze
+        :return:
+        """
+        if self.emoji_list:
+            urwid.disconnect_signal(self.emoji_list, 'assign_emoji', self.handle_assign_emoji)
+            urwid.disconnect_signal(self.emoji_list, 'close_emoji_list', self.handle_close_emoji_list)
+            self.urwid_loop.widget = self._body
+            self.emoji_list = None
+
     def handle_close_set_snooze(self):
         """
         Close set_snooze
@@ -895,6 +917,13 @@ class App:
             urwid.connect_signal(self.set_snooze_widget, 'set_snooze_time', self.handle_set_snooze_time)
             urwid.connect_signal(self.set_snooze_widget, 'close_set_snooze', self.handle_close_set_snooze)
             self.urwid_loop.widget = self.set_snooze_widget
+
+    def open_emoji(self):
+        if not self.emoji_list:
+            self.emoji_list = EmotionsWidget(self.urwid_loop.widget, self.urwid_loop)
+            urwid.connect_signal(self.emoji_list, 'assign_emoji', self.handle_assign_emoji)
+            urwid.connect_signal(self.emoji_list, 'close_emoji_list', self.handle_close_emoji_list)
+            self.urwid_loop.widget = self.emoji_list
 
     def configure_screen(self, screen):
         screen.set_terminal_properties(colors=self.store.config['colors'])

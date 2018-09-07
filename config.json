@@ -17,7 +17,8 @@
         "set_insert_mode": "i",
         "yank_message": "y",
         "get_permalink": "r",
-        "set_snooze": "ctrl d"
+        "set_snooze": "ctrl d",
+        "open_emoji": "ctrl e"
     },
     "sidebar": {
         "width": 25,
